@@ -37,6 +37,7 @@ class VideoPlayerValue {
     this.isLooping = false,
     this.isBuffering = false,
     this.volume = 1.0,
+    this.rotation = 0,
     this.errorDescription,
   });
 
@@ -87,6 +88,9 @@ class VideoPlayerValue {
   /// Is null when [initialized] is false.
   final Size size;
 
+  /// The rotation of the video.
+  final int rotation;
+
   /// Indicates whether or not the video has been loaded and is ready to play.
   bool get initialized => duration != null;
 
@@ -119,6 +123,7 @@ class VideoPlayerValue {
     bool isLooping,
     bool isBuffering,
     double volume,
+    int rotation,
     String errorDescription,
   }) {
     return VideoPlayerValue(
@@ -131,6 +136,7 @@ class VideoPlayerValue {
       isLooping: isLooping ?? this.isLooping,
       isBuffering: isBuffering ?? this.isBuffering,
       volume: volume ?? this.volume,
+      rotation: rotation ?? this.rotation,
       errorDescription: errorDescription ?? this.errorDescription,
     );
   }
@@ -147,6 +153,7 @@ class VideoPlayerValue {
         'isLooping: $isLooping, '
         'isBuffering: $isBuffering'
         'volume: $volume, '
+        'rotation: $rotation, '
         'errorDescription: $errorDescription)';
   }
 }
@@ -276,6 +283,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           value = value.copyWith(
             duration: event.duration,
             size: event.size,
+            rotation: event.rotation,
           );
           initializingCompleter.complete(null);
           _applyLooping();

@@ -210,6 +210,7 @@ class VideoEvent {
     this.duration,
     this.size,
     this.buffered,
+    this.rotation,
   });
 
   /// The type of the event.
@@ -230,6 +231,11 @@ class VideoEvent {
   /// Only used if [eventType] is [VideoEventType.bufferingUpdate].
   final List<DurationRange> buffered;
 
+  /// Rotation of the video.
+  ///
+  /// Only used if [eventType] is [VideoEventType.initialized].
+  final int rotation;
+
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
@@ -238,6 +244,7 @@ class VideoEvent {
             eventType == other.eventType &&
             duration == other.duration &&
             size == other.size &&
+            rotation == other.rotation &&
             listEquals(buffered, other.buffered);
   }
 
@@ -246,6 +253,7 @@ class VideoEvent {
       eventType.hashCode ^
       duration.hashCode ^
       size.hashCode ^
+      rotation.hashCode ^
       buffered.hashCode;
 }
 
