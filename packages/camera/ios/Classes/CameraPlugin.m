@@ -155,6 +155,36 @@ static ResolutionPreset getResolutionPresetForString(NSString *preset) {
   }
 }
 
+- (UIImageOrientation)getImageRotation {
+  float const threshold = 45.0;
+  BOOL (^isNearValue)(float value1, float value2) = ^BOOL(float value1, float value2) {
+    return fabsf(value1 - value2) < threshold;
+  };
+  BOOL (^isNearValueABS)(float value1, float value2) = ^BOOL(float value1, float value2) {
+    return isNearValue(fabsf(value1), fabsf(value2));
+  };
+  float yxAtan = (atan2(_motionManager.accelerometerData.acceleration.y,
+                        _motionManager.accelerometerData.acceleration.x)) *
+                 180 / M_PI;
+
+  if (isNearValue(-90.0, yxAtan)) {
+    return UIImageOrientationRight;
+  } else if (isNearValueABS(180.0, yxAtan)) {
+    return _cameraPosition == AVCaptureDevicePositionBack ? UIImageOrientationUp
+                                                          : UIImageOrientationDown;
+  } else if (isNearValueABS(0.0, yxAtan)) {
+    return _cameraPosition == AVCaptureDevicePositionBack ? UIImageOrientationDown /*rotate 180* */
+                                                          : UIImageOrientationUp /*do not rotate*/;
+  } else if (isNearValue(90.0, yxAtan)) {
+    return UIImageOrientationLeft;
+  }
+  // If none of the above, then the device is likely facing straight down or straight up -- just
+  // pick something arbitrary
+  // TODO: Maybe use the UIInterfaceOrientation if in these scenarios
+  return UIImageOrientationUp;
+}
+@end
+
 @interface FLTCam : NSObject <FlutterTexture,
                               AVCaptureVideoDataOutputSampleBufferDelegate,
                               AVCaptureAudioDataOutputSampleBufferDelegate,
@@ -250,7 +280,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
   if ([_captureDevice position] == AVCaptureDevicePositionFront) {
     connection.videoMirrored = YES;
   }
-  connection.videoOrientation = AVCaptureVideoOrientationPortrait;
+  connection.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
   [_captureSession addInputWithNoConnections:_captureVideoInput];
   [_captureSession addOutputWithNoConnections:_captureVideoOutput];
   [_captureSession addConnection:connection];
@@ -703,6 +733,9 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
                                  }];
 
   NSParameterAssert(_videoWriterInput);
+  // Add orientation metadata.
+  CGFloat rotationDegrees = [self getDeviceRotation];
+  _videoWriterInput.transform = CGAffineTransformMakeRotation(rotationDegrees * M_PI / 180);
   _videoWriterInput.expectsMediaDataInRealTime = YES;
 
   // Add the audio input
@@ -900,5 +933,7 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
     }
   }
 }
+
+
 
 @end
